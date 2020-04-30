@@ -1,26 +1,84 @@
-def cetak_matriks(matriks):
-    for row in matriks:
-        print (row)
- 
-def jumlahkan_matriks(matriks_a, matriks_b):
-    temp_row = []
-    matriks_ab= []
+from mpi4py import MPI
+from numpy  import zeros,array
+import sys
 
-    for i in range(0,len(matriks_a)):
-        for j in range(0,len(matriks_a[0])):
-            temp_row.append(matriks_a[i][j] + matriks_b[i][j])
-        matriks_ab.append(temp_row)
-        temp_row = []
-    return matriks_ab
-matriks_a = [[1, 2, 3, 5], [1, 2, 3, 5], [1, 2, 3, 5]]
-matriks_b = [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]
- 
-print ("matriks_a : ")
-cetak_matriks(matriks_a)
- 
-print ("\nmatriks_b : ")
-cetak_matriks(matriks_b)
- 
+DEBUGLEVEL = 1
+
+def ldebug(level, string, *vartuple ):
+    if (DEBUGLEVEL < level):
+        return
+    print(string % (vartuple) )
+
+def initMatrix(n, m):
+    mtr = zeros((m, n), dtype=float)
+    return mtr
+    
+def fillmatrix(a, n, m, offset):
+    for y in range(0, m):
+        for x in range(0,n):
+            a[y][x] = x + y + offset
+
+def showMatrix(name, a, n, m):
+    for y in range(0, m):
+        for x in range(0, m):
+            sys.stdout.write("%s[%02u][%02u] = %6.2lf   " % (name, y, x , a[y][x]))
+        print("");  # print new line
+        
+def master(dim):
+    
+    info = MPI.Status()  # To store status information later
+    
+    ti1 = MPI.Wtime()
+    
+    comm = MPI.COMM_WORLD
+    nrprocs = comm.Get_size()
+    procid  = comm.Get_rank()
+
+    if (nrprocs <= 1):
+        print("Not enough slaves : probably forgot to start using mpirun ?")
+        exit(1)
+        
+    print("Program starting with %u slaves and 1 master process ....\n" % (nrprocs - 1));
+                     
+    # MPI needs arrays (pointers) for messages to work properly 
+    a = initMatrix(dim, dim)
+    b = initMatrix(dim, dim)
+    c = initMatrix(dim, dim)
+    
+#    m = array([0], dtype=int)[0]   # array with 1 element (could be 0-d array as well)
+
+    fillmatrix(a, dim, dim, 0)
+    fillmatrix(b, dim, dim, 10)
+    
+    m = int(dim / (nrprocs - 1))
+    
+    m = comm.bcast(m, root = 0)
+    ldebug(0,"Subvectorsize (%d) broadcasted to all slaves...", m)
+       
+    # send the strips
+    for y in range(1,nrprocs):
+        comm.Send([a[(y-1)*m : y*m],MPI.DOUBLE],y, m * y)
+        comm.Send([b[(y-1)*m : y*m],MPI.DOUBLE],y, m + y)
+        
+    ldebug(0,"Submatrices now sent to all slaves...\n")
+    print("This is Matrix A :")
+    showMatrix("A", a, dim, dim)
+    print("And this is Matrix B :")
+    showMatrix("B", b, dim, dim)
+        
+    for x in range(1,nrprocs):
+        comm.Recv([c[(x-1)*m : x*m],MPI.DOUBLE],x, m * x, status = info)
+        
+    print("And here is the result C = A + B that we received : \n")
+    showMatrix("C", c, dim, dim)
+    
+    ti2 = MPI.Wtime()
+    runtime = ti2 - ti1
+    
+    print("\nMaster : run time = %f secs." % runtime)
+    
+    return 0
+print ("\nmatriks_A : ")
 print ("\nhasil penjumlahan :")
-hasil = jumlahkan_matriks(matriks_a, matriks_b)
-cetak_matriks(hasil)
+# hasil = jumlahkan_matriks(matriks_a, matriks_b)
+# cetak_matriks(hasil)
