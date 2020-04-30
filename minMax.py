@@ -24,7 +24,13 @@ def instruksiMin(data):
             min = data[i+1]
     return min
 
-#cek algo min max
+#cek algo min=31.5 max=94.53
 #m = instruksiMax(data_stream)
 #n = instruksiMin(data_stream)
 #print(m,n)
+
+if rank == 0:
+    print("nilai maks = ",instruksiMax(data_stream))
+
+if rank == 1:
+    print("nilai min = ",instruksiMin(data_stream))
