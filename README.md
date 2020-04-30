@@ -1,5 +1,3 @@
-TEST
-
 #TUBES SISTER KELOMPOK SANTUY
 
 Membuat suatu algoritma dengan cara paralel dengan MPI.
