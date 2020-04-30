@@ -1,4 +1,5 @@
 # DOKUMENTASI IN PREPARATION DITANYAIN BUAT APA APANYA
+# ini kommunikasi reduction
 
 # import mpi4py
 from mpi4py import MPI
@@ -33,6 +34,23 @@ size = comm.Get_size()
 # generate angka integer secara random untuk setiap proses
 randomangka = random.randint(1,5)
 
+
+# [4/16 4:06 PM] AJI GAUTAMA PUTRADA
+#     kira2 size arti nya apa?
+# ​[4/16 4:06 PM] IVAN
+#     iya pak munculnya 4 setiap rank
+# ​[4/16 4:06 PM] YAZID
+#     size itu maksudnya berapa yang sedang jalanin itu juga?
+# ​[4/16 4:06 PM] MUCHAMAD
+#     jumlah proses paralelnya(?)
+# ​[4/16 4:07 PM] AJI GAUTAMA PUTRADA
+#     ya...
+# ​[4/16 4:07 PM] AJI GAUTAMA PUTRADA
+#     jumlah program paralel nya
+# ​[4/16 4:07 PM] AJI GAUTAMA PUTRADA
+#     sesuai -n yang kita masukin ya
+
+
 # jika saya adalah proses dengan rank 0 maka:
 # saya menerima nilai dari proses 1 s.d proses dengan rank terbesar
 # menjumlah semua nilai yang didapat (termasuk nilai proses saya)
@@ -49,3 +67,20 @@ if rank == 0:
 else:
     data = {'rank': rank,'dest':0,'send':randomangka}
     comm.send(data, dest=0, tag=11)
+
+
+
+
+///////////////////////////////////////
+# KODINGAN PAK AJI
+# comment dulu yang atas kalo mau run
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+rank = comm.rank
+size = comm.size
+
+# for i in range(0,8,2):
+# batesnya 8 , stepnya 2
+for i in range(rank,8,size):
+    print i
